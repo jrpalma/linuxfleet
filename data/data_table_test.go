@@ -29,7 +29,7 @@ func TestListByOwner(t *testing.T) {
 	id1 := uuid.NewString()
 	id2 := uuid.NewString()
 
-	table, err := NewDataTables(db)
+	table, err := NewTables(db)
 	assert.NoError(t, err)
 
 	for _, tableName := range dataTableList() {
@@ -39,10 +39,10 @@ func TestListByOwner(t *testing.T) {
 		obj2 := Object{ID: id2, OwnerID: "owner1", Version: 2, Attributes: map[string]any{"attr2": "val2"}}
 
 		// Insert test objects
-		_, err := db.Exec(query, obj1.ID, obj1.OwnerID, obj1.Version, jsonString(obj1.Attributes))
+		_, err := db.Exec(query, obj1.ID, obj1.CreatedAt, obj1.UpdatedAt, obj1.OwnerID, obj1.Version, jsonString(obj1.Attributes))
 		assert.NoError(t, err)
 
-		_, err = db.Exec(query, obj2.ID, obj2.OwnerID, obj2.Version, jsonString(obj2.Attributes))
+		_, err = db.Exec(query, obj2.ID, obj2.CreatedAt, obj2.UpdatedAt, obj2.OwnerID, obj2.Version, jsonString(obj2.Attributes))
 		assert.NoError(t, err)
 
 		objects, err := table.ListByOwner(tableName, "owner1")
@@ -55,7 +55,7 @@ func TestListByOwner(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	table, err := NewDataTables(db)
+	table, err := NewTables(db)
 	assert.NoError(t, err)
 
 	for _, tableName := range dataTableList() {
@@ -69,9 +69,11 @@ func TestCreate(t *testing.T) {
 
 		var id string
 		var ownerID string
+		var createdAt Timestamp
+		var updatedAt Timestamp
 		var version int
 		var attrsJson string
-		err = db.QueryRow(query, obj.ID).Scan(&id, &ownerID, &version, &attrsJson)
+		err = db.QueryRow(query, obj.ID).Scan(&id, &createdAt, &updatedAt, &ownerID, &version, &attrsJson)
 		assert.NoError(t, err)
 
 		var retrievedAttrs map[string]any
@@ -83,7 +85,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestDeleteByID(t *testing.T) {
-	table, err := NewDataTables(db)
+	table, err := NewTables(db)
 	assert.NoError(t, err)
 
 	for _, tableName := range dataTableList() {
@@ -93,7 +95,7 @@ func TestDeleteByID(t *testing.T) {
 		obj := Object{ID: objectID, OwnerID: "owner1", Version: 1, Attributes: map[string]any{"attr1": "val1"}}
 
 		// Insert test object
-		_, err := db.Exec(insertQuery, obj.ID, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
+		_, err := db.Exec(insertQuery, obj.ID, obj.CreatedAt, obj.UpdatedAt, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
 		assert.NoError(t, err)
 
 		err = table.DeleteByID(tableName, objectID)
@@ -108,7 +110,7 @@ func TestDeleteByID(t *testing.T) {
 }
 
 func TestUpdateByID(t *testing.T) {
-	table, err := NewDataTables(db)
+	table, err := NewTables(db)
 	assert.NoError(t, err)
 
 	for _, tableName := range dataTableList() {
@@ -118,7 +120,7 @@ func TestUpdateByID(t *testing.T) {
 		obj := Object{ID: objectID, OwnerID: "owner1", Version: 1, Attributes: map[string]any{"attr1": "val1"}}
 
 		// Insert test object
-		_, err := db.Exec(inserQuery, obj.ID, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
+		_, err := db.Exec(inserQuery, obj.ID, obj.CreatedAt, obj.UpdatedAt, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
 		assert.NoError(t, err)
 
 		obj.OwnerID = "updatedOwner"
@@ -144,7 +146,7 @@ func TestUpdateByID(t *testing.T) {
 }
 
 func TestGetByID(t *testing.T) {
-	table, err := NewDataTables(db)
+	table, err := NewTables(db)
 	assert.NoError(t, err)
 
 	for _, tableName := range dataTableList() {
@@ -154,7 +156,7 @@ func TestGetByID(t *testing.T) {
 		obj := Object{ID: objectID, OwnerID: "owner1", Version: 1, Attributes: map[string]any{"attr1": "val1"}}
 
 		// Insert test object
-		_, err := db.Exec(query, obj.ID, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
+		_, err := db.Exec(query, obj.ID, obj.CreatedAt, obj.UpdatedAt, obj.OwnerID, obj.Version, jsonString(obj.Attributes))
 		assert.NoError(t, err)
 
 		retrievedObj, err := table.GetByID(tableName, objectID)
