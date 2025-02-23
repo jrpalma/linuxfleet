@@ -22,22 +22,22 @@ func (h *Server) signup(c echo.Context) error {
 
 	var user signupRequest
 	if err := c.Bind(&user); err != nil {
-		return sc.BadRequest(c, "Invalid request payload")
+		return sc.BadRequest("Invalid request payload")
 	}
 
 	signupLink, err := uuid.NewRandom()
 	if err != nil {
-		return sc.InternalError(c, "Failed to generate signup link")
+		return sc.InternalError("Failed to generate signup link")
 	}
 
 	salt, err := uuid.NewRandom()
 	if err != nil {
-		return sc.InternalError(c, "Failed to generate signup salt")
+		return sc.InternalError("Failed to generate signup salt")
 	}
 
 	htmlContent, err := sc.HtmlTemplates().Execute("signup-email", signupLink.String())
 	if err != nil {
-		return sc.InternalError(c, "Failed to execute email template")
+		return sc.InternalError("Failed to execute email template")
 	}
 
 	hash := sha256.New()
@@ -59,7 +59,7 @@ func (h *Server) signup(c echo.Context) error {
 
 	err = sc.Tables().Insert("signup", signupObject)
 	if err != nil {
-		return sc.InternalError(c, "Failed to store user data")
+		return sc.InternalError("Failed to store user data")
 	}
 
 	from := mail.NewEmail("LinuxFleet Support", "support@linuxfleet.com")
@@ -70,8 +70,8 @@ func (h *Server) signup(c echo.Context) error {
 
 	err = sc.SendEmail(message)
 	if err != nil {
-		return sc.InternalError(c, "Failed to send registration email")
+		return sc.InternalError("Failed to send registration email")
 	}
 
-	return sc.OK(c, "User signup initiated successfully")
+	return sc.OK("User signup initiated successfully")
 }

@@ -23,16 +23,16 @@ type ServerContext struct {
 	templates *html.Templates
 }
 
-func (sc *ServerContext) BadRequest(c echo.Context, message string) error {
+func (sc *ServerContext) BadRequest(message string) error {
 	return sc.errorResponse(http.StatusBadRequest, message)
 }
 
-func (h *ServerContext) InternalError(c echo.Context, message string) error {
+func (h *ServerContext) InternalError(message string) error {
 	return h.errorResponse(http.StatusInternalServerError, message)
 }
 
-func (h *ServerContext) OK(c echo.Context, message string) error {
-	return c.JSON(http.StatusOK, map[string]string{"message": message})
+func (h *ServerContext) OK(message string) error {
+	return h.ec.JSON(http.StatusOK, map[string]string{"message": message})
 }
 
 func (h *ServerContext) SendEmail(email *mail.SGMailV3) error {
