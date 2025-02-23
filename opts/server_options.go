@@ -6,22 +6,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Options struct {
+type ServerOptions struct {
 	DatabaseCluster []string `yaml:"database_cluster"`
 }
 
 // Marshal the Options struct to YAML format
-func (o *Options) Marshal() ([]byte, error) {
+func (o *ServerOptions) Marshal() ([]byte, error) {
 	return yaml.Marshal(o)
 }
 
 // Unmarshal a byte slice into the Options struct from YAML format
-func (o *Options) Unmarshal(data []byte) error {
+func (o *ServerOptions) Unmarshal(data []byte) error {
 	return yaml.Unmarshal(data, o)
 }
 
 // WriteOptions writes the Options object to a YAML file
-func (o *Options) WriteOptions(filename string) error {
+func (o *ServerOptions) WriteOptions(filename string) error {
 	yamlData, err := o.Marshal()
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (o *Options) WriteOptions(filename string) error {
 }
 
 // ReadOptions reads the Options object from a YAML file
-func (o *Options) ReadOptions(filename string) error {
+func (o *ServerOptions) ReadOptions(filename string) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		return err

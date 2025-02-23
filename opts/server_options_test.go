@@ -10,11 +10,11 @@ import (
 func TestMarshal(t *testing.T) {
 	testCases := []struct {
 		name  string
-		input Options
+		input ServerOptions
 	}{
 		{
 			"BasicTest",
-			Options{DatabaseCluster: []string{"db1", "db2"}},
+			ServerOptions{DatabaseCluster: []string{"db1", "db2"}},
 		},
 	}
 
@@ -30,18 +30,18 @@ func TestUnmarshal(t *testing.T) {
 	testCases := []struct {
 		name     string
 		input    []byte
-		expected Options
+		expected ServerOptions
 	}{
 		{
 			"BasicTest",
 			[]byte("database_cluster: [db1, db2]\n"),
-			Options{DatabaseCluster: []string{"db1", "db2"}},
+			ServerOptions{DatabaseCluster: []string{"db1", "db2"}},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			var result Options
+			var result ServerOptions
 			err := result.Unmarshal(tc.input)
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, result)
@@ -52,13 +52,13 @@ func TestUnmarshal(t *testing.T) {
 func TestWriteAndReadOptions(t *testing.T) {
 	testCases := []struct {
 		name     string
-		input    Options
-		expected Options
+		input    ServerOptions
+		expected ServerOptions
 	}{
 		{
 			"BasicTest",
-			Options{DatabaseCluster: []string{"db1", "db2"}},
-			Options{DatabaseCluster: []string{"db1", "db2"}},
+			ServerOptions{DatabaseCluster: []string{"db1", "db2"}},
+			ServerOptions{DatabaseCluster: []string{"db1", "db2"}},
 		},
 	}
 
@@ -71,7 +71,7 @@ func TestWriteAndReadOptions(t *testing.T) {
 			err = tc.input.WriteOptions(tmpFile.Name())
 			assert.NoError(t, err)
 
-			var result Options
+			var result ServerOptions
 			err = result.ReadOptions(tmpFile.Name())
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expected, result)
