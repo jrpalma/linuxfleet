@@ -3,7 +3,6 @@ package server
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
@@ -50,10 +49,9 @@ func (h *Server) signup(c echo.Context) error {
 		OwnerID: user.Email,
 		Version: 1,
 		Attributes: map[string]any{
-			"email":     user.Email,
-			"password":  passwordHash,
-			"salt":      salt.String(),
-			"createdAt": time.Now(),
+			"email":    user.Email,
+			"password": passwordHash,
+			"salt":     salt.String(),
 		},
 	}
 
