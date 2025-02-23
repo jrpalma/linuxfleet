@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to LinuxFleet!</title>
+    <link rel="stylesheet" href="https://unpkg.com/simpledotcss/simple.min.css">
+</head>
+<body>
+    <div class="email-container">
+        <h1>Welcome to LinuxFleet!</h1>
+        <p>Thank you for choosing LinuxFleet for your Linux management needs. 
+	The button below will take you to our external page where you can finalize your account setup.</p>
+	<a href="{{ .URL }}" class="button">Complete Registration</a>
+        <p>If the button does not work, you can copy and paste this URL into your browser:
+	<a href="{{ .URL }}">{{ .URL }}</a></p>
+        <p>Thank you for choosing LinuxFleet!</p>
+    </div>
+</body>
+</html>

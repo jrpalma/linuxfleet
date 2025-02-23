@@ -35,7 +35,7 @@ func (h *Server) signup(c echo.Context) error {
 		return sc.InternalError(c, "Failed to generate signup salt")
 	}
 
-	htmlContent, err := sc.HtmlTemplates().Execute("signup", signupLink.String())
+	htmlContent, err := sc.HtmlTemplates().Execute("signup-email", signupLink.String())
 	if err != nil {
 		return sc.InternalError(c, "Failed to execute email template")
 	}
