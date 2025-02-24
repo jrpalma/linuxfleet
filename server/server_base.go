@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http/httptest"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 
 	"github.com/jrpalma/linuxfleet/data"
@@ -17,22 +18,26 @@ type Server struct {
 	email     EmailSender
 	echo      *echo.Echo
 	templates *html.Templates
+	validator *validator.Validate
 }
 
 func NewServer(tables *data.Tables, templates *html.Templates, email EmailSender) *Server {
 	server := &Server{
+		validator: validator.New(validator.WithRequiredStructEnabled()),
 		templates: templates,
 		echo:      echo.New(),
 		tables:    tables,
 		email:     email,
 	}
 	server.echo.HideBanner = true
-	server.echo.POST("/api/registration/start", server.startRegistrationHandler)
+	server.echo.POST("/api/registration/initiate", server.initiateRegistrationHandler)
+	server.echo.POST("/api/registration/complete", server.completeRegistrationHandler)
 	return server
 }
 
 func (s *Server) ServerContext(c echo.Context) *ServerContext {
 	return &ServerContext{
+		validator: s.validator,
 		templates: s.templates,
 		tables:    s.tables,
 		email:     s.email,

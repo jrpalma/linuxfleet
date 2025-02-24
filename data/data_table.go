@@ -150,9 +150,9 @@ func sqlCreatTable(tableName string) string {
 
 func dataTableList() []string {
 	return []string{
-		"admins",
-		"users",
-		"devices",
-		"signup",
+		"admin",
+		"user",
+		"device",
+		"registration",
 	}
 }

@@ -2,6 +2,7 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"net/http/httptest"
 
@@ -16,6 +17,11 @@ import (
 type TestContext struct {
 	EchoContext  echo.Context
 	HttpResponse *httptest.ResponseRecorder
+}
+
+func (tc *TestContext) UnmarshalResponse(model any) error {
+	err := json.Unmarshal(tc.HttpResponse.Body.Bytes(), model)
+	return err
 }
 
 type EmailSenderMock struct {

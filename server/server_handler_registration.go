@@ -2,10 +2,10 @@ package server
 
 import (
 	"crypto/sha256"
+	"database/sql"
 	"encoding/hex"
-	"path/filepath"
+	"errors"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
@@ -13,31 +13,28 @@ import (
 	"github.com/jrpalma/linuxfleet/data"
 )
 
-type startRegistrationRequest struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=8"`
+type initiateRegistrationRequest struct {
+	Email    string `validate:"required,email"`
+	Password string `validate:"required,min=8"`
+}
+type initiateRegistrationResponse struct {
+	Token string
 }
 
-func (h *Server) startRegistrationHandler(c echo.Context) error {
+func (h *Server) initiateRegistrationHandler(c echo.Context) error {
 	sc := h.ServerContext(c)
-	validate := validator.New(validator.WithRequiredStructEnabled())
 
-	var user startRegistrationRequest
-	if err := c.Bind(&user); err != nil {
-		return sc.BadRequest("Invalid request payload")
-	}
-
-	if err := validate.Struct(&user); err != nil {
+	var request initiateRegistrationRequest
+	if err := sc.BindModel(&request); err != nil {
 		return sc.BadRequest(err.Error())
 	}
 
-	registrationToken, err := uuid.NewRandom()
+	token, err := uuid.NewRandom()
 	if err != nil {
 		return sc.InternalError("Failed to generate signup link")
 	}
 
-	registrationURL := filepath.Join(sc.GetEnv("BASE_URL"),
-		"/registration/complete?token="+registrationToken.String())
+	registrationURL := sc.FormatURL("/registration/complete?token=%v", token)
 	templateValues := map[string]any{"URL": registrationURL}
 
 	salt, err := uuid.NewRandom()
@@ -45,33 +42,32 @@ func (h *Server) startRegistrationHandler(c echo.Context) error {
 		return sc.InternalError("Failed to generate signup salt")
 	}
 
-	htmlEmailContent, err := sc.HtmlTemplates().Execute("registration-email.tmpl", templateValues)
+	htmlEmailContent, err := sc.ExecuteTemplate("registration-email.tmpl", templateValues)
 	if err != nil {
 		return sc.InternalError("Failed to execute email template")
 	}
 
 	hash := sha256.New()
-	hash.Write(salt[:])
-	hash.Write([]byte(user.Password))
+	hash.Write([]byte(salt.String()))
+	hash.Write([]byte(request.Password))
 	passwordHash := hex.EncodeToString(hash.Sum(nil))
 
-	signupObject := data.Object{
-		ID:      registrationToken.String(),
-		OwnerID: user.Email,
+	registrationObject := data.Object{
+		ID:      token.String(),
 		Version: 1,
 		Attributes: map[string]any{
-			"email":    user.Email,
+			"email":    request.Email,
 			"password": passwordHash,
 			"salt":     salt.String(),
 		},
 	}
 
-	err = sc.Tables().Insert("signup", signupObject)
+	err = sc.DataInsert("registration", registrationObject)
 	if err != nil {
 		return sc.InternalError("Failed to store user data")
 	}
 
-	to := mail.NewEmail(user.Email, user.Email)
+	to := mail.NewEmail(request.Email, request.Email)
 	from := mail.NewEmail("LinuxFleet Support", "support@linuxfleet.com")
 	message := mail.NewSingleEmail(from, "LinuxFleet Registration", to, "", htmlEmailContent)
 
@@ -80,5 +76,40 @@ func (h *Server) startRegistrationHandler(c echo.Context) error {
 		return sc.InternalError("Failed to send registration email")
 	}
 
-	return sc.OK("User signup initiated successfully")
+	return sc.OKJSON(map[string]any{"token": token.String()})
+}
+
+type completeRegistrationRequest struct {
+	Token string `validate:"required,uuid"`
+	Seed  string `validate:"required,min=8"`
+}
+
+func (h *Server) completeRegistrationHandler(c echo.Context) error {
+	sc := h.ServerContext(c)
+
+	var request completeRegistrationRequest
+	if err := sc.BindModel(&request); err != nil {
+		return sc.BadRequest(err.Error())
+	}
+
+	registrationObject, err := sc.DataGetByID("registration", request.Token)
+	if errors.Is(err, sql.ErrNoRows) {
+		return sc.NotFound("The registration does not exists")
+	} else if err != nil {
+		return sc.InternalError(err.Error())
+	}
+
+	adminID, err := uuid.NewRandom()
+	if err != nil {
+		return sc.InternalError("Failed not generate admin ID")
+	}
+
+	adminObject := data.Object{Attributes: registrationObject.Attributes, ID: adminID.String(), Version: 1}
+	adminObject.Attributes["seed"] = request.Seed
+
+	if err := sc.DataInsert("admin", adminObject); err != nil {
+		return sc.InternalError("Failed to save administrator")
+	}
+
+	return sc.OK("User registration was completed successfully")
 }
