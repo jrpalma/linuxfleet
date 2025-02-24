@@ -2,16 +2,20 @@ package html
 
 import (
 	"bytes"
+	"embed"
 	"html/template"
 	"log"
 )
+
+//go:embed templates
+var templateFiles embed.FS
 
 type Templates struct {
 	list *template.Template
 }
 
 func NewTemplates() *Templates {
-	list, err := template.ParseGlob("templates/*.tmpl")
+	list, err := template.ParseFS(templateFiles, "templates/*.tmpl")
 	if err != nil {
 		log.Fatal(err)
 	}
